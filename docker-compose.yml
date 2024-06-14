@@ -1,0 +1,108 @@
+networks:
+  database:
+    driver: bridge
+  shopez:
+    driver: bridge
+
+volumes:
+  pgsql-data:
+    driver: local
+  redis-data:
+    driver: local
+  mongo-data:
+    driver: local
+  minio-data:
+    driver: local
+  typesense-data:
+    driver: local
+
+services:
+  pgsql:
+    image: postgres:16-alpine
+    container_name: shopez_pgsql
+    environment:
+      PGPASSWORD: '${DB_PASSWORD:-postgres1234}'
+      POSTGRES_DB: '${DB_DATABASE:-shopez}'
+      POSTGRES_USER: '${DB_USERNAME:-shopez}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD:-postgres1234}'
+    volumes:
+        - pgsql-data:/var/lib/postgresql/data
+        - ${PWD}/docker/pgsql/init-db.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql
+    networks:
+      - database
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}"]
+      retries: 3
+      timeout: 5s
+
+  redis:
+    image: redis:7.4-rc1-alpine
+    container_name: shopez_redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - database
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      retries: 3
+      timeout: 5s
+
+  mongodb:
+    image: mongo:7.0-jammy
+    container_name: shopez_mongodb
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: '${MONGO_ROOT_USER:-shopez}'
+      MONGO_INITDB_ROOT_PASSWORD: '${MONGO_ROOT_PASSWORD:-mongo1234}'
+    networks:
+      - database
+    expose:
+      - 27017
+    healthcheck:
+      test: ["CMD", "mongo", "-u", "${MONGO_INITDB_ROOT_USERNAME}", "-p", "${MONGO_INITDB_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      retries: 3
+      timeout: 5s
+      start_period: 60s
+
+  minio:
+    image: minio/minio:latest
+    container_name: shopez_minio
+    environment:
+      MINIO_ACCESS_KEY: '${MINIO_ROOT_USER:-shopez}'
+      MINIO_SECRET_KEY: '${MINIO_ROOT_PASSWORD:-minio1234}'
+    volumes:
+      - minio-data:/data/minio
+    networks:
+      - shopez
+    ports:
+      - '${FORWARD_MINIO_PORT:-9000}:9000'
+      - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      retries: 3
+      timeout: 5s
+    command: minio server /data/minio --console-address ":8900"
+
+  typesense:
+    image: typesense/typesense:27.0.rc18
+    container_name: shopez_typesense
+    environment:
+      TYPESENSE_DATA_DIR: '${TYPESENSE_DATA_DIR:-/typesense-data}'
+      TYPESENSE_API_KEY: '${TYPESENSE_API_KEY:-xyz}'
+      TYPESENSE_ENABLE_CORS: '${TYPESENSE_ENABLE_CORS:-true}'
+    volumes:
+        - typesense-data:/typesense-data
+    networks:
+      - shopez
+      - database
+    ports:
+      - '${FORWARD_TYPESENSE_PORT:-8108}:8108'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider",  "http://localhost:8108/health"]
+      retries: 5
+      timeout: 10s
