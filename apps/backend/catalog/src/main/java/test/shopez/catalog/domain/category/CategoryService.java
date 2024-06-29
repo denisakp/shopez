@@ -1,7 +1,8 @@
 package test.shopez.catalog.domain.category;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import test.shopez.catalog.domain.category.dto.CategoryCreateDTO;
 import test.shopez.catalog.domain.category.dto.CategoryResponseDTO;
@@ -10,23 +11,22 @@ import test.shopez.catalog.error.exception.ConflictException;
 import test.shopez.catalog.error.exception.InternalServerException;
 import test.shopez.catalog.error.exception.NotFoundException;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+    private final CategoryDTOMapper categoryDTOMapper;
 
-    @Autowired
-    private CategoryDTOMapper categoryDTOMapper;
+    public CategoryService(CategoryRepository categoryRepository, CategoryDTOMapper categoryDTOMapper) {
+        this.categoryRepository = categoryRepository;
+        this.categoryDTOMapper = categoryDTOMapper;
+    }
 
-    // TODO: Implement the pagination
-    public List<CategoryResponseDTO> findAll() {
+    public Page<CategoryResponseDTO> findAll(Pageable pageable) {
         try {
-            return categoryRepository.findAll().stream().map(categoryDTOMapper).collect(Collectors.toList());
+            return categoryRepository.findAll(pageable).map(categoryDTOMapper);
         } catch (Exception e) {
             throw new InternalServerException(e.getMessage());
         }
@@ -51,7 +51,7 @@ public class CategoryService {
         }
     }
 
-    public Optional<CategoryResponseDTO> findById(String id) {
+    public Optional<CategoryResponseDTO> findById(@NotNull String id) {
         Optional<Category> category = categoryRepository.findById(id);
 
         if (category.isEmpty()) {
@@ -65,7 +65,7 @@ public class CategoryService {
         }
     }
 
-    public CategoryResponseDTO update(String id, CategoryCreateDTO payload) {
+    public CategoryResponseDTO update(@NotNull String id, @NotNull CategoryCreateDTO payload) {
         Optional<Category> category = categoryRepository.findById(id);
         if (category.isEmpty()) {
             throw new NotFoundException("Category", id);
@@ -87,7 +87,7 @@ public class CategoryService {
         }
     }
 
-    public void deleteById(String id) {
+    public void deleteById(@NotNull String id) {
         if (!categoryRepository.existsById(id)) {
             throw new NotFoundException("Category", id);
         }

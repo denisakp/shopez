@@ -1,6 +1,8 @@
 package test.shopez.catalog.domain.product.dto;
 
 import test.shopez.catalog.domain.product.ProductStatus;
+import test.shopez.catalog.domain.product.dto.relations.ProductCategoryResponseDTO;
+import test.shopez.catalog.domain.product.dto.relations.ProductTagResponseDTO;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +19,7 @@ public record ProductResponseDTO(
         double price,
         List<String> colors,
         List<String> sizes,
-        List<String> tags,
+        List<ProductTagResponseDTO> tags,
         ProductStatus status,
         String reviews
 ) {

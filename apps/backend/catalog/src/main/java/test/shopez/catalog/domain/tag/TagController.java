@@ -1,26 +1,29 @@
 package test.shopez.catalog.domain.tag;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import test.shopez.catalog.domain.tag.dto.CreateTagDTO;
 import test.shopez.catalog.domain.tag.dto.TagResponseDTO;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "${apiPrefix}/${apiVersion}/tags", produces = "application/json")
 public class TagController {
 
-    @Autowired
-    private TagService tagService;
+    private final TagService tagService;
+
+    public TagController(TagService tagService) {
+        this.tagService = tagService;
+    }
 
     @GetMapping
-    public ResponseEntity<List<TagResponseDTO>> findAllHandler() {
-        return new ResponseEntity<>(tagService.findAll(), HttpStatus.OK);
+    public ResponseEntity<Page<TagResponseDTO>> findAllHandler(Pageable p) {
+        return new ResponseEntity<>(tagService.findAll(p), HttpStatus.OK);
     }
 
     @PostMapping

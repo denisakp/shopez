@@ -1,7 +1,8 @@
 package test.shopez.catalog.domain.review;
 
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import test.shopez.catalog.domain.review.dto.likedislike.LikeDislikeCreateDTO;
@@ -13,24 +14,25 @@ import test.shopez.catalog.error.exception.InternalServerException;
 import test.shopez.catalog.error.exception.NotFoundException;
 
 import java.util.Date;
-import java.util.List;
+
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 @Service
 public class ReviewService {
 
-    @Autowired
-    private ReviewRepository reviewRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewDTOMapper reviewDTOMapper;
 
-    @Autowired
-    private ReviewDTOMapper reviewDTOMapper;
+    public ReviewService(ReviewRepository reviewRepository, ReviewDTOMapper reviewDTOMapper) {
+        this.reviewRepository = reviewRepository;
+        this.reviewDTOMapper = reviewDTOMapper;
+    }
 
     // TODO: Implement the pagination and data filtering
-    public List<ReviewResponseDTO> findAll() {
+    public Page<ReviewResponseDTO> findAll(Pageable pageable) {
         try {
-            return reviewRepository.findAll().stream().map(reviewDTOMapper).collect(Collectors.toList());
+            return reviewRepository.findAll(pageable).map(reviewDTOMapper);
         } catch (Exception e) {
             throw new RuntimeException("Error while fetching reviews", e);
         }
@@ -55,7 +57,7 @@ public class ReviewService {
         }
     }
 
-    public Optional<ReviewResponseDTO> findById(String id) {
+    public Optional<ReviewResponseDTO> findById(@NotNull String id) {
         Optional<Review> review = reviewRepository.findById(id);
 
         if (review.isEmpty()) {
@@ -69,7 +71,7 @@ public class ReviewService {
         }
     }
 
-    public ReviewResponseDTO update(String id, @NotNull ReviewCreateDTO payload) {
+    public ReviewResponseDTO update(@NotNull String id, @NotNull ReviewCreateDTO payload) {
         Optional<Review> review = reviewRepository.findById(id);
 
         if (review.isEmpty()) {
@@ -102,7 +104,7 @@ public class ReviewService {
         }
     }
 
-    public void likeDislike(String id, @NotNull LikeDislikeCreateDTO payload) {
+    public void likeDislike(@NotNull String id, @NotNull LikeDislikeCreateDTO payload) {
         Optional<Review> review = reviewRepository.findById(id);
 
         if (review.isEmpty()) {

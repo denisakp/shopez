@@ -1,6 +1,8 @@
 package test.shopez.catalog.domain.tag;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import test.shopez.catalog.domain.tag.dto.CreateTagDTO;
 import test.shopez.catalog.domain.tag.dto.TagResponseDTO;
@@ -9,28 +11,28 @@ import test.shopez.catalog.error.exception.ConflictException;
 import test.shopez.catalog.error.exception.InternalServerException;
 import test.shopez.catalog.error.exception.NotFoundException;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class TagService {
 
-    @Autowired
-    private TagRepository tagRepository;
+    private final TagRepository tagRepository;
+    private final TagDTOMapper tagDTOMapper;
 
-    @Autowired
-    private TagDTOMapper tagDTOMapper;
+    public TagService(TagRepository tagRepository, TagDTOMapper tagDTOMapper) {
+        this.tagRepository = tagRepository;
+        this.tagDTOMapper = tagDTOMapper;
+    }
 
-    public List<TagResponseDTO> findAll() {
+    public Page<TagResponseDTO> findAll(Pageable pageable) {
         try {
-            return tagRepository.findAll().stream().map(tagDTOMapper).collect(Collectors.toList());
+            return tagRepository.findAll(pageable).map(tagDTOMapper);
         } catch(Exception e) {
             throw new InternalServerException(e.getMessage());
         }
     }
 
-    public TagResponseDTO create(CreateTagDTO payload) {
+    public TagResponseDTO create(@NotNull CreateTagDTO payload) {
         try {
             Tag tag = Tag.builder()
                     .name(payload.getName())
@@ -44,7 +46,7 @@ public class TagService {
         }
     }
 
-    public Optional<TagResponseDTO> findById(String id) {
+    public Optional<TagResponseDTO> findById(@NotNull String id) {
         Optional<Tag> tag = tagRepository.findById(id);
         if (tag.isEmpty()) {
             throw new NotFoundException("Tag", id);
@@ -57,7 +59,7 @@ public class TagService {
         }
     }
 
-    public TagResponseDTO update(String id, CreateTagDTO payload) {
+    public TagResponseDTO update(@NotNull String id, @NotNull CreateTagDTO payload) {
         Optional<Tag> tag = tagRepository.findById(id);
         if (tag.isEmpty()) {
             throw new NotFoundException("Tag", id);

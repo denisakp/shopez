@@ -8,8 +8,11 @@ import test.shopez.catalog.domain.product.ProductRepository;
 
 public class ProductIdValidator implements ConstraintValidator<ValidProductId, String> {
 
-    @Autowired
-    private ProductRepository repository;
+    private final ProductRepository repository;
+
+    public ProductIdValidator(ProductRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {

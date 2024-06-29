@@ -1,7 +1,8 @@
 package test.shopez.catalog.domain.review;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,19 +10,21 @@ import test.shopez.catalog.domain.review.dto.likedislike.LikeDislikeCreateDTO;
 import test.shopez.catalog.domain.review.dto.review.ReviewCreateDTO;
 import test.shopez.catalog.domain.review.dto.review.ReviewResponseDTO;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "${apiPrefix}/${apiVersion}/reviews", produces = "application/json")
 public class ReviewController {
 
-    @Autowired
-    private ReviewService reviewService;
+    private final ReviewService reviewService;
+
+    public ReviewController(ReviewService reviewService) {
+        this.reviewService = reviewService;
+    }
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponseDTO>> findAllHandler() {
-        return new ResponseEntity<>(reviewService.findAll(), HttpStatus.OK);
+    public ResponseEntity<Page<ReviewResponseDTO>> findAllHandler(Pageable p) {
+        return new ResponseEntity<>(reviewService.findAll(p), HttpStatus.OK);
     }
 
     @PostMapping

@@ -1,26 +1,29 @@
 package test.shopez.catalog.domain.category;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import test.shopez.catalog.domain.category.dto.CategoryCreateDTO;
 import test.shopez.catalog.domain.category.dto.CategoryResponseDTO;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController()
 @RequestMapping(path = "${apiPrefix}/${apiVersion}/categories", produces = "application/json")
 public class CategoryController {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponseDTO>> findAllHandler() {
-        return new ResponseEntity<>(categoryService.findAll(), HttpStatus.OK);
+    public ResponseEntity<Page<CategoryResponseDTO>> findAllHandler(Pageable p) {
+        return new ResponseEntity<>(categoryService.findAll(p), HttpStatus.OK);
     }
 
     @PostMapping

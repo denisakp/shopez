@@ -6,8 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import test.shopez.catalog.domain.category.CategoryRepository;
 
 public class CategoryIdValidator implements ConstraintValidator<ValidCategoryId, String> {
-    @Autowired
-    private CategoryRepository repository;
+
+    private final CategoryRepository repository;
+
+    public CategoryIdValidator(CategoryRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {

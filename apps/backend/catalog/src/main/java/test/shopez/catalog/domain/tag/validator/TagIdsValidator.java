@@ -9,8 +9,11 @@ import java.util.List;
 
 public class TagIdsValidator implements ConstraintValidator<ValidTagIds, List<String>> {
 
-    @Autowired
-    private TagRepository repository;
+    private final TagRepository repository;
+
+    public TagIdsValidator(TagRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public boolean isValid(List<String> strings, ConstraintValidatorContext ctx) {

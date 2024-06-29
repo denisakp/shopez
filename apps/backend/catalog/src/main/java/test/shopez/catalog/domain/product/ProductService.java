@@ -1,7 +1,8 @@
 package test.shopez.catalog.domain.product;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import test.shopez.catalog.domain.product.dto.ProductCreateDTO;
 import test.shopez.catalog.domain.product.dto.ProductResponseDTO;
@@ -10,22 +11,22 @@ import test.shopez.catalog.error.exception.ConflictException;
 import test.shopez.catalog.error.exception.InternalServerException;
 import test.shopez.catalog.error.exception.NotFoundException;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
 
-    @Autowired
-    private ProductDTOMapper productDTOMapper;
+    private final ProductRepository productRepository;
+    private final ProductDTOMapper productDTOMapper;
 
-    // TODO: Implement the pagination and data filtering
-    public List<ProductResponseDTO> findAll() {
+    public ProductService(ProductRepository productRepository, ProductDTOMapper productDTOMapper) {
+        this.productRepository = productRepository;
+        this.productDTOMapper = productDTOMapper;
+    }
+
+    public Page<ProductResponseDTO> findAll(Pageable pageable){
         try {
-            return productRepository.findAll().stream().map(productDTOMapper).collect(Collectors.toList());
+            return productRepository.findAll(pageable).map(productDTOMapper);
         } catch (Exception e) {
             throw new InternalServerException(e.getMessage());
         }
@@ -75,7 +76,7 @@ public class ProductService {
         }
     }
 
-    public ProductResponseDTO update(String id, @NotNull ProductCreateDTO payload) {
+    public ProductResponseDTO update(@NotNull String id, @NotNull ProductCreateDTO payload) {
         Optional<Product> product = productRepository.findById(id);
 
         if (product.isEmpty()) {
