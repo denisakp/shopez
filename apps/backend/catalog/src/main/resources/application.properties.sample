@@ -1,0 +1,7 @@
+server.port=8090
+server.address=localhost
+spring.application.name=catalog-service
+spring.data.mongodb.uri=mongodb://localhost:27017/catalog
+spring.data.mongodb.auto-index-creation=true
+apiPrefix=catalog
+apiVersion=v1
