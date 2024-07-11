@@ -2,7 +2,6 @@ package apperr
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 )
 
@@ -45,18 +44,6 @@ func Status(err error) int {
 		return e.Status()
 	}
 	return http.StatusInternalServerError
-}
-
-func NewNotFound(message string) *Error {
-	return &Error{Type: NotFound, Message: fmt.Sprintf("not found: %v", message)}
-}
-
-func NewBadRequest(message string) *Error {
-	return &Error{Type: BadRequest, Message: fmt.Sprintf("bad request: %v", message)}
-}
-
-func NewAuthorization(message string) *Error {
-	return &Error{Type: Authorization, Message: message}
 }
 
 func NewInternal(message string) *Error {

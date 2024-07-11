@@ -13,9 +13,22 @@ type UploaderConfig struct {
 
 // LoadConfig loads the configuration from the environment variables
 func LoadConfig() (*UploaderConfig, error) {
-	err := godotenv.Load()
+	// attempt to load env from system
+	err := loadEnvFromSystem()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load env file: %v", err)
+		if _, err := os.Stat(".env"); err == nil {
+			err := godotenv.Load()
+			if err != nil {
+				return nil, fmt.Errorf("failed to load env file: %v", err)
+			}
+
+			err = loadEnvFromSystem()
+			if err != nil {
+				return nil, fmt.Errorf("failed to load env from system: %v", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to load env from system: %v", err)
+		}
 	}
 
 	// load minio config
@@ -55,4 +68,26 @@ func getMultipleEnv(keys ...string) (map[string]string, error) {
 		envs[key] = value
 	}
 	return envs, nil
+}
+
+func loadEnvFromSystem() error {
+	keys := []string{
+		"API_VERSION",
+		"AWS_SECRET_ACCESS_KEY",
+		"AWS_ACCESS_KEY_ID",
+		"AWS_REGION",
+		"AWS_ENDPOINT_URL",
+		"AWS_BUCKET",
+	}
+
+	for _, key := range keys {
+		if _, ok := os.LookupEnv(key); !ok {
+			return fmt.Errorf("env variable %s is not set", key)
+		}
+	}
+
+	if err := godotenv.Load(); err != nil {
+		return fmt.Errorf("failed to load env file: %v", err)
+	}
+	return nil
 }
